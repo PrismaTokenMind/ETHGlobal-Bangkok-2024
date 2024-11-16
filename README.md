@@ -9,7 +9,7 @@
 
 ### Repository Structure
 
-1. **`cowapi`** - Contains the [front-end application](https://eth-bangkok-mu.vercel.app/) as well as the API integration with CoW Swap.
+1. **`cowapi`** - Contains the [front-end application](https://eth-bangkok-mu.vercel.app/), the API integration with CoW Swap, Subgraph and 1Inch portfolio fetching.
 
 2. **`fund-manager-graph`** - The Graph subgraph that indexes and organizes data from the Fund Manager contract for front-end usage.
 
