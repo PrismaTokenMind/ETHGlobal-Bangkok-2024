@@ -52,7 +52,9 @@ pub(super) async fn single_interaction_round(
     let response = request_sender
         .send_request(request)
         .await
-        .context("Error sending request to Model")?;
+        .map_err(|e| {
+            anyhow::anyhow!("Error sending request to Model: {:?}", e)
+        })?;
 
     debug!("Response: {:?}", response);
 
@@ -97,7 +99,9 @@ fn generate_request(
     let mut json_body = serde_json::Map::new();
     json_body.insert("model".to_string(), serde_json::json!(model_settings.id));
     json_body.insert("messages".to_string(), serde_json::to_value(messages).context("Error serializing messages")?);
-    json_body.insert("tools".to_string(), serde_json::to_value(tools).context("Error serializing tools")?);
+    if !tools.is_empty() {
+        json_body.insert("tools".to_string(), serde_json::to_value(tools).context("Error serializing tools")?);
+    }
     json_body.insert("top_p".to_string(), serde_json::json!(top_p));
     json_body.insert("temperature".to_string(), serde_json::json!(temperature));
     let json_body = serde_json::Value::Object(json_body);
