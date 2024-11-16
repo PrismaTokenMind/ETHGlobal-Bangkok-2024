@@ -4,8 +4,25 @@ use anyhow::{Context, Result};
 use http_body_util::BodyExt;
 use hyper::client::conn::http1::SendRequest;
 use hyper::header::{AUTHORIZATION, CONNECTION, CONTENT_TYPE, HOST};
-use hyper::{Method, StatusCode};
+use hyper::Method;
+use pyo3::{pyclass, pymethods};
 use tracing::debug;
+
+#[pyclass]
+#[derive(Debug, Clone)]
+pub struct APIResponse {
+    #[pyo3(get, set)]
+    pub status_code: u16,
+    #[pyo3(get, set)]
+    pub response: String,
+}
+
+#[pymethods]
+impl APIResponse {
+    fn json(&self) -> String {
+        self.response.clone()
+    }
+}
 
 pub(super) async fn single_interaction_round(
     request_sender: &mut SendRequest<String>,
@@ -15,7 +32,7 @@ pub(super) async fn single_interaction_round(
     top_p: f64, temperature: f64,
     recv_private_data: &mut Vec<Vec<u8>>,
     sent_private_data: &mut Vec<Vec<u8>>,
-) -> Result<String> {
+) -> Result<APIResponse> {
 
     // Prepare the Request to send to the model's API
     let request = generate_request(messages, tools, top_p, temperature, &config.model_settings)
@@ -39,13 +56,7 @@ pub(super) async fn single_interaction_round(
 
     debug!("Response: {:?}", response);
 
-    if response.status() != StatusCode::OK {
-        // TODO - do a graceful shutdown
-        panic!(
-            "Request failed with status code: {}",
-            response.status()
-        );
-    }
+    let status_code = response.status().as_u16();
 
     // Collect the received private data
     extract_private_data(
@@ -62,20 +73,19 @@ pub(super) async fn single_interaction_round(
         .context("Error reading response body")?
         .to_bytes();
 
-    let parsed = serde_json::from_str::<serde_json::Value>(&String::from_utf8_lossy(&payload))
+    let json_response = serde_json::from_str::<serde_json::Value>(&String::from_utf8_lossy(&payload))
         .context("Error parsing the response")?;
 
     // Pretty printing the response
     debug!(
         "Response: {}",
-        serde_json::to_string_pretty(&parsed).context("Error pretty printing the response")?
+        serde_json::to_string_pretty(&json_response).context("Error pretty printing the response")?
     );
 
-    debug!("Extracting the assistant's response...");
-
-    let received_assistant_message = serde_json::json!(parsed["choices"][0]["message"]);
-
-    Ok(received_assistant_message.to_string())
+    Ok(APIResponse {
+        status_code,
+        response: serde_json::to_string(&json_response).context("Error serializing the response")?,
+    })
 }
 
 fn generate_request(

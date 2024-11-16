@@ -52,15 +52,18 @@ url = "https://api.red-pill.ai/v1/chat/completions"
 
 async def run_async():
     result = await tlsn_langchain.exec_async("gpt-4o", os.getenv("REDPILL_API_KEY"), messages, tools, top_p, temperature, stream, url)
-    print("Response: ", result[0])
-    print("Proof:", result[1].replace("\n", "").replace(" ", ""))
+    print("Async Response Code: ", result.api_response.status_code)
+    print("Async Response Json: ", result.api_response.json())
+    print("Async Response Proof Length: ", result.proof.replace("\n", "").replace(" ", ""))
 
 
 def main():
     # Run the sync function
     print("Running the sync function")
     result = tlsn_langchain.exec("gpt-4o", os.getenv("REDPILL_API_KEY"), messages, tools, top_p, temperature, stream, url)
-    print("Sync Response: ", result[0])
+    print("Sync Response Code: ", result.api_response.status_code)
+    print("Sync Response Json: ", result.api_response.json())
+    print("Sync Response Proof Length: ", len(result.proof))
 
     # Run the async function
     print("Running the async function")

@@ -4,20 +4,32 @@ mod config;
 mod tlsn_operations;
 
 use crate::config::{Config, ModelSettings, ProviderURL};
-use crate::model_interactions::single_interaction_round;
+use crate::model_interactions::{single_interaction_round, APIResponse};
 use crate::setup_notary::setup_connections;
 use crate::tlsn_operations::{build_proof, notarise_session};
 use anyhow::{Context, Result};
 use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::PyModule;
-use pyo3::{pyfunction, pymodule, wrap_pyfunction, PyAny, PyErr, PyResult, Python};
+use pyo3::{pyclass, pyfunction, pymodule, wrap_pyfunction, PyAny, PyErr, PyResult, Python};
 use tokio::runtime::Runtime;
 use tracing::debug;
+
+#[pyclass]
+#[derive(Debug, Clone)]
+pub struct NotarisedResponse {
+    #[pyo3(get, set)]
+    pub proof: String,
+    #[pyo3(get, set)]
+    pub api_response: APIResponse
+}
+
 
 #[pymodule]
 fn tlsn_langchain(_: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(exec, m)?)?;
     m.add_function(wrap_pyfunction!(exec_async, m)?)?;
+    m.add_class::<NotarisedResponse>()?;
+    m.add_class::<APIResponse>()?;
     Ok(())
 }
 
@@ -33,7 +45,7 @@ pub fn exec_async(py: Python, model: String, api_key: String, messages: Vec<Stri
 
 #[allow(unused_variables)]
 #[pyfunction]
-pub fn exec(py: Python, model: String, api_key: String, messages: Vec<String>, tools: Vec<String>, top_p: f64, temperature: f64, stream: bool, url: String) -> PyResult<(String, String)> {
+pub fn exec(py: Python, model: String, api_key: String, messages: Vec<String>, tools: Vec<String>, top_p: f64, temperature: f64, stream: bool, url: String) -> PyResult<NotarisedResponse> {
 
         let rt = Runtime::new().unwrap();
         rt.block_on(notarised_model_request(model, api_key, messages, tools, top_p, temperature, url)).map_err(|e| {
@@ -41,7 +53,7 @@ pub fn exec(py: Python, model: String, api_key: String, messages: Vec<String>, t
         })
 }
 
-pub async fn notarised_model_request(model: String, api_key: String, messages: Vec<String>, tools: Vec<String>, top_p: f64, temperature: f64, url: String) -> Result<(String, String)> {
+pub async fn notarised_model_request(model: String, api_key: String, messages: Vec<String>, tools: Vec<String>, top_p: f64, temperature: f64, url: String) -> Result<NotarisedResponse> {
 
 
     let config = Config::new(
@@ -75,7 +87,7 @@ pub async fn notarised_model_request(model: String, api_key: String, messages: V
     let mut recv_private_data = vec![];
     let mut sent_private_data = vec![];
 
-    let response = single_interaction_round(
+    let api_response = single_interaction_round(
         &mut request_sender,
         &config,
         parsed_messages,
@@ -99,7 +111,10 @@ pub async fn notarised_model_request(model: String, api_key: String, messages: V
     debug!("Building the proof...");
     let proof = build_proof(notarised_session);
 
-    Ok((response, serde_json::to_string_pretty(&proof)?))
+    Ok(NotarisedResponse {
+        proof: serde_json::to_string_pretty(&proof)?,
+        api_response
+    })
 }
 
 #[cfg(test)]
@@ -153,8 +168,9 @@ mod tests {
         let temperature = 0.3;
         let url= "https://api.red-pill.ai/v1/chat/completions".to_string();
 
-        let (response, proof) = notarised_model_request(model, api_key, messages, tools, top_p, temperature, url).await?;
-        println!("Response: {}", response);
+        let NotarisedResponse{ proof, api_response } = notarised_model_request(model, api_key, messages, tools, top_p, temperature, url).await?;
+        println!("Model API Response Code: {}", api_response.status_code);
+        println!("Model API Response: {}", api_response.response);
         println!("Proof: {}", proof.replace("\n", "").replace(" ", ""));
 
         Ok(())
