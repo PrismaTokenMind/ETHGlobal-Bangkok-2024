@@ -8,7 +8,7 @@ license = "Apache-2.0"
 keywords = ["agentkit", "ai", "langchain", "verifiable", "trading", "agent", "crypto", "blockchain"]
 
 [tool.poetry.scripts]
-chatbot = "verifiable_trading_agent.chatbot:main"
+agent = "verifiable_trading_agent.chatbot:main"
 
 [tool.poetry.dependencies]
 verifiable-langchain-agent = { path = "../verifiable_langchain_agent" }
