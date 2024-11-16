@@ -388,9 +388,9 @@ class ChatRedpill(BaseChatModel):
     def lc_serializable(self) -> bool:
         return True
 
-    redpill_api_base: str = Field(default=DEFAULT_API_BASE, alias="base_url") # TODO - replace with your custom API URL
+    redpill_api_base: str = Field(default=DEFAULT_API_BASE, alias="base_url")
     """Redpill custom endpoints"""
-    redpill_api_key: SecretStr = Field(alias="api_key") # TODO - replace with your custom API key
+    redpill_api_key: SecretStr = Field(alias="api_key")
     """Redpill API Key"""
     streaming: bool = False
     """Whether to stream the results or not."""
@@ -398,7 +398,7 @@ class ChatRedpill(BaseChatModel):
     """Maximum number of tokens to generate."""
     request_timeout: int = Field(default=60, alias="timeout")
     """request timeout for chat http requests"""
-    model: str = "gpt-4o" # TODO - replace with your custom model name
+    model: str = "gpt-4o"
     """model name of Red-Pill, default is `gpt-4o`"""
     temperature: Optional[float] = Field(default=0.3)
     """What sampling temperature to use."""
