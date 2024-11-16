@@ -488,7 +488,8 @@ class ChatVerifiableRedpill(BaseChatModel):
         res = self._chat(messages, **kwargs)
         if res.status_code != 200:
             raise ValueError(f"Error from Redpill api response: {res}")
-        response = json.loads(res.json())
+        # If the res.json() is not a valid JSON, convert it to a valid JSON using json.loads
+        response = res.json() if isinstance(res.json(), dict) else json.loads(res.json())
         return self._create_chat_result(response)
 
     def _stream(
@@ -603,26 +604,41 @@ class ChatVerifiableRedpill(BaseChatModel):
 
         # Convert `tools` and `model` lists to JSON strings with escaped quotes
         tools = [json.dumps(tool).replace('"', '\"') for tool in parameters.pop("tools", [])]
-        messages = [json.dumps(_convert_message_to_dict(message)).replace('"', '\"') for message in messages]
+        formatted_messages = [json.dumps(_convert_message_to_dict(message)).replace('"', '\"') for message in messages]
 
         # Wrap each string in triple quotes to create the desired format
         tools = [f'{tool}' for tool in tools]
-        messages = [f'{message}' for message in messages]
+        formatted_messages = [f'{message}' for message in formatted_messages]
 
-        res = tlsn_langchain.exec(
-            model=model,
-            api_key=self.redpill_api_key.get_secret_value(),
-            messages=messages,
-            tools=tools,
-            top_p=top_p,
-            temperature=temperature,
-            stream=stream,
-            url=url
-        )
+        try:
+            res = tlsn_langchain.exec(
+                model=model,
+                api_key=self.redpill_api_key.get_secret_value(),
+                messages=formatted_messages,
+                tools=tools,
+                top_p=top_p,
+                temperature=temperature,
+                stream=stream,
+                url=url
+            )
 
-        self.proof_registry.append(res.proof)
+            self.proof_registry.append(res.proof)
+            return res.api_response
+        except Exception as e:
+            payload = self._create_payload_parameters(messages, **kwargs)
+            url = self.redpill_api_base
+            headers = self._create_headers_parameters(**kwargs)
 
-        return res.api_response
+            res = requests.post(
+                url=url,
+                timeout=self.request_timeout,
+                headers=headers,
+                json=payload,
+                stream=self.streaming,
+            )
+            self.proof_registry.append("{ Error: " + str(e) + " }")
+
+            return res
 
     def _create_payload_parameters(  # type: ignore[no-untyped-def]
         self, messages: List[BaseMessage], **kwargs
