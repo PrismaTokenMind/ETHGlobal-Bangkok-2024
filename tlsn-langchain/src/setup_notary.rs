@@ -74,6 +74,8 @@ pub(super) async fn setup_connections(
 
         // Configure a new prover with the unique session id returned from notary client.
         let prover_config = ProverConfig::builder()
+            .max_sent_data(2usize.pow(15))
+            .max_recv_data(2usize.pow(15))
             .id(session_id)
             .server_dns(config.model_settings.api_settings.server_domain.clone())
             .build()
