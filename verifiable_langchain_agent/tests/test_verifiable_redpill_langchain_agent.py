@@ -8,7 +8,7 @@ from langchain_core.messages import HumanMessage
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.prebuilt import create_react_agent
 
-from verifiable_langchain_agent import VerifiableChatRedpill
+from verifiable_langchain_agent import ChatVerifiableRedpill
 
 # Load environment variables from .env file
 load_dotenv()
@@ -26,7 +26,7 @@ def setup_agent():
 
     # Create the agent with memory and tools
     memory = MemorySaver()
-    model = VerifiableChatRedpill(model="gpt-4o", redpill_api_key=redpill_api_key)
+    model = ChatVerifiableRedpill(model="gpt-4o", redpill_api_key=redpill_api_key)
     search = TavilySearchResults(max_results=2)
     tools = [search]
     agent_executor = create_react_agent(model, tools, checkpointer=memory)

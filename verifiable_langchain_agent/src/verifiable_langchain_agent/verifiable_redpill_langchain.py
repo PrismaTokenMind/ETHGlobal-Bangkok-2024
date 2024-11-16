@@ -221,7 +221,7 @@ async def aconnect_httpx_sse(
         yield EventSource(response)
 
 
-class VerifiableChatRedpill(BaseChatModel):
+class ChatVerifiableRedpill(BaseChatModel):
     """Redpill chat model integration.
 
     Setup:
@@ -489,7 +489,6 @@ class VerifiableChatRedpill(BaseChatModel):
         if res.status_code != 200:
             raise ValueError(f"Error from Redpill api response: {res}")
         response = json.loads(res.json())
-        print("Response from Redpill API JSON: ", response)
         return self._create_chat_result(response)
 
     def _stream(
@@ -596,7 +595,6 @@ class VerifiableChatRedpill(BaseChatModel):
         url = self.redpill_api_base
 
         parameters = {**self._default_params, **kwargs}
-        print("Parameters: ", parameters)
         temperature = parameters.pop("temperature", 0.3)
         top_p = parameters.pop("top_p", 0.85)
         model = parameters.pop("model", "gpt-4o")
