@@ -49,11 +49,22 @@ stream = False
 
 
 
-async def main():
-    result = await tlsn_langchain.exec("gpt-4o", os.getenv("REDPILL_API_KEY"), messages, tools, top_p, temperature, stream)
+async def run_async():
+    result = await tlsn_langchain.exec_async("gpt-4o", os.getenv("REDPILL_API_KEY"), messages, tools, top_p, temperature, stream)
     print("Response: ", result[0])
     print("Proof:", result[1].replace("\n", "").replace(" ", ""))
 
-# Run the async function
-print("Running the async function")
-asyncio.run(main())
+
+def main():
+    # Run the sync function
+    print("Running the sync function")
+    result = tlsn_langchain.exec("gpt-4o", os.getenv("REDPILL_API_KEY"), messages, tools, top_p, temperature, stream)
+    print("Sync Response: ", result[0])
+
+    # Run the async function
+    print("Running the async function")
+    asyncio.run(run_async())
+
+
+if __name__ == "__main__":
+    main()

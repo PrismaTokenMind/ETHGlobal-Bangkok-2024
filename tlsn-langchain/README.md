@@ -12,7 +12,7 @@ exposing Rust-based functions as Python bindings through `pyo3`.
 
 1. **Create and Activate a Python Virtual Environment**:
    ```bash
-   python -m venv .env
+   python -m venv .venv
    source .env/bin/activate
    ```
 
@@ -25,7 +25,7 @@ exposing Rust-based functions as Python bindings through `pyo3`.
 3. **Develop and Build the Package**:
    Use Maturin to develop the package in your virtual environment.
    ```bash
-   maturin develop
+   maturin develop --release
    ```
 
    This command will build and install the package within the virtual environment, allowing Python to access the
@@ -33,11 +33,11 @@ exposing Rust-based functions as Python bindings through `pyo3`.
 
 ## Testing the Package
 
-A sample script, `sample.py`, is provided to test the package functionality. To run this script, ensure the virtual
+A sample script, `example/example.py`, is provided to test the package functionality. To run this script, ensure the virtual
 environment is activated and then execute:
 
 ```bash
-python sample.py
+poetry run python example/example.py
 ```
 
 This script demonstrates how to use the Python wrapper for TLS Notary functions provided by the package.

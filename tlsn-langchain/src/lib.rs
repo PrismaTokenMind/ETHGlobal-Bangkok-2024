@@ -11,22 +11,34 @@ use anyhow::{Context, Result};
 use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::PyModule;
 use pyo3::{pyfunction, pymodule, wrap_pyfunction, PyAny, PyErr, PyResult, Python};
+use tokio::runtime::Runtime;
 use tracing::debug;
 
 #[pymodule]
 fn tlsn_langchain(_: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(exec, m)?)?;
+    m.add_function(wrap_pyfunction!(exec_async, m)?)?;
     Ok(())
 }
 
 #[allow(unused_variables)]
 #[pyfunction]
-pub fn exec(py: Python, model: String, api_key: String, messages: Vec<String>, tools: Vec<String>, top_p: f64, temperature: f64, stream: bool) -> PyResult<&PyAny> {
+pub fn exec_async(py: Python, model: String, api_key: String, messages: Vec<String>, tools: Vec<String>, top_p: f64, temperature: f64, stream: bool) -> PyResult<&PyAny> {
     pyo3_asyncio::tokio::future_into_py(py, async move {
         notarised_model_request(model, api_key, messages, tools, top_p, temperature).await.map_err(|e| {
             PyErr::new::<PyTypeError, _>(e.to_string())
         })
     })
+}
+
+#[allow(unused_variables)]
+#[pyfunction]
+pub fn exec(py: Python, model: String, api_key: String, messages: Vec<String>, tools: Vec<String>, top_p: f64, temperature: f64, stream: bool) -> PyResult<(String, String)> {
+
+        let rt = Runtime::new().unwrap();
+        rt.block_on(notarised_model_request(model, api_key, messages, tools, top_p, temperature)).map_err(|e| {
+            PyErr::new::<PyTypeError, _>(e.to_string())
+        })
 }
 
 pub async fn notarised_model_request(model: String, api_key: String, messages: Vec<String>, tools: Vec<String>, top_p: f64, temperature: f64) -> Result<(String, String)> {

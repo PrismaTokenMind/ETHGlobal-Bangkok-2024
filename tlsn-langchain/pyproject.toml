@@ -7,10 +7,13 @@ authors = [ "Hello" ]
 [tool.maturin]
 profile = "release"
 
+[tool.poetry.scripts]
+example = "example.example:main"
 
 [tool.poetry.dependencies]
 python = ">=3.8"
 maturin-import-hook = "^0.1.0"
+python-dotenv = "^1.0.1"
 
 [tool.poetry.dev-dependencies]
 maturin = "^0.13.2"
