@@ -16,6 +16,9 @@ from cdp_langchain.tools import CdpTool
 
 
 from verifiable_trading_agent.cow_trade_action import COW_TRADE_PROMPT, CoWTradeInput, cow_trade
+from verifiable_trading_agent.cow_trade_limit_order import COW_TRADE_LIMIT_PROMPT, CoWTradeLimitInput, cow_trade_limit
+from verifiable_trading_agent.get_polymarket_markets import POLYMARKET_DATA_PROMPT, PolymarketInput, polymarket_data
+
 
 # Load environment variables from .env file
 load_dotenv()
@@ -60,6 +63,22 @@ def initialize_agent():
         args_schema=CoWTradeInput,
         func=cow_trade,
     )
+    # Define a new tool for signing messages.
+    cowTradeLimitTool = CdpTool(
+        name="cow_trade_limit",
+        description=COW_TRADE_LIMIT_PROMPT,
+        cdp_agentkit_wrapper=agentkit,
+        args_schema=CoWTradeLimitInput,
+        func=cow_trade_limit,
+    )
+
+    polymarketDataTool = CdpTool(
+        name="polymarket_markets",
+        description=POLYMARKET_DATA_PROMPT,
+        cdp_agentkit_wrapper=agentkit,
+        args_schema=PolymarketInput,
+        func=polymarket_data,
+    )
 
     # Define the list of tool names to keep
     tools_to_keep = {"get_balance", "get_wallet_details"}
@@ -68,6 +87,8 @@ def initialize_agent():
     filtered_tools = [tool for tool in tools if tool.name in tools_to_keep]
 
     filtered_tools.append(cowTradeTool)
+    filtered_tools.append(cowTradeLimitTool)
+    filtered_tools.append(polymarketDataTool)
 
     # Store buffered conversation history in memory.
     memory = MemorySaver()
