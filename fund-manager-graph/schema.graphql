@@ -1,0 +1,29 @@
+type LimitOrderCreated @entity(immutable: true) {
+  id: Bytes!
+  amountIn: BigInt! # uint256
+  amountOut: BigInt! # uint256
+  tokenIn: Bytes! # address
+  tokenOut: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type TradeCompleted @entity(immutable: true) {
+  id: Bytes!
+  amountIn: BigInt! # uint256
+  amountOut: BigInt! # uint256
+  tokenIn: Bytes! # address
+  tokenOut: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type BotSummary @entity {
+  id: Bytes! # address
+  depositBalance: BigInt!
+  tradedUSDC: BigInt!
+  numberOfTrades: BigInt!
+  pnl: BigInt!
+}

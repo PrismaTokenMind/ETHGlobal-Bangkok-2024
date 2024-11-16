@@ -2,3 +2,5 @@
 /verifiable_trading_agent/wallet_data.txt
 /verifiable_langchain_agent/build/*
 /verifiable_langchain_agent/dist/*
+/fund-manager-graph/generated
+/fund-manager-graph/node_modules
