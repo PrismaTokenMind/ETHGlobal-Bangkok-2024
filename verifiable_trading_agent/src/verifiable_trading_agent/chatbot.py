@@ -1,6 +1,9 @@
 import os
+import random
 import sys
 import time
+
+import requests
 
 from dotenv import load_dotenv
 
@@ -27,7 +30,7 @@ load_dotenv()
 wallet_data_file = "../../wallet_data.txt"
 
 
-def initialize_agent():
+def initialize_agent(mode):
     """Initialize the agent with CDP Agentkit."""
     # Initialize LLM.
     llm = ChatVerifiableRedpill(model="gpt-4o")
@@ -94,13 +97,41 @@ def initialize_agent():
     memory = MemorySaver()
     config = {"configurable": {"thread_id": "CDP Agentkit Chatbot Example!"}}
 
+    custom_state_modifier_for_polymarket = "You are an crypto currency analyst that will be given information from polymarket events. Your goal is the following, based on give information identify whether there's an opportunity to speculate on certain crypto currency prices. If you find a correlation between event and some crypto currency you should output this crypto currency ticket. You can also specify limit buy/sell prices to execute trade at if you anticipate that price will go to that level in the future. Otherwise you can just output the ticket which will mean purchase at current market price. Your output should be in the following format: Purchase token on mev resistant cow swap or Purchase token at limit order price on mev resistant cow swap. You can only use cow swap for trading. You can only use USDC to purchase other tokens. You can only purchase tokens for 0.1 USDC in single trade. You shouldn't return any explanations. Just say what tokens to purchase and at what price. If you can't find any opportunity to speculate you should output the following message: There's no opportunity to speculate on any token. You should be creative in your trading strategy and look for unusual correlations between events and crypto currency prices." if mode == 2 else "You are a helpful agent that can interact onchain using the Coinbase Developer Platform Agentkit. You are empowered to interact onchain using your tools. If not, you can provide your wallet details and request funds from the user. You are only allowed to operate on Arbitrum Mainnet (e.g. `arbitrum-mainnet`). If someone asks you to do something you can't do with your currently available tools, you must say so, and encourage them to implement it themselves using the CDP SDK + Agentkit, recommend they go to docs.cdp.coinbase.com for more informaton. Be concise and helpful with your responses. Refrain from restating your tools' descriptions unless it is explicitly requested."
+
     # Create ReAct Agent using the LLM and CDP Agentkit tools.
     return create_react_agent(
         llm,
         tools=filtered_tools,
         checkpointer=memory,
-        state_modifier="You are a helpful agent that can interact onchain using the Coinbase Developer Platform Agentkit. You are empowered to interact onchain using your tools. If not, you can provide your wallet details and request funds from the user. You are only allowed to operate on Arbitrum Mainnet (e.g. `arbitrum-mainnet`). If someone asks you to do something you can't do with your currently available tools, you must say so, and encourage them to implement it themselves using the CDP SDK + Agentkit, recommend they go to docs.cdp.coinbase.com for more informaton. Be concise and helpful with your responses. Refrain from restating your tools' descriptions unless it is explicitly requested.",
+        state_modifier=custom_state_modifier_for_polymarket,
     ), config, llm
+
+def get_polymarket_data():
+    """Get the latest Polymarket data."""
+    # Get the latest Polymarket data using the Polymarket API.
+    
+    GET_QUOTE_URL = 'https://gamma-api.polymarket.com/markets?order=id&ascending=false&limit=100'
+
+    headers = {
+        "Content-Type": "application/json"
+    }
+
+    response = requests.get(GET_QUOTE_URL, headers=headers)
+    # Check if the request was successful
+    if response.status_code != 200:
+        raise Exception(f"Error getting polymarket data: {response.text}")
+    
+    order_id = response.json()
+
+    # Get random index from array
+    random_index = random.randint(0, len(order_id) - 1)
+
+    market = order_id[random_index]
+
+    question = market["question"] + "\n" + market["description"] + "\n" + market["outcomes"] + " " + market["outcomePrices"]
+
+    return question
 
 
 # Autonomous Mode
@@ -109,10 +140,13 @@ def run_autonomous_mode(agent_executor, config, interval=10):
     print("Starting autonomous mode...")
     while True:
         try:
+
+            question = get_polymarket_data()
+
+            print("Polymarket Data: ", question)
             # Provide instructions autonomously
             thought = (
-                "Be creative and do something interesting on the blockchain. "
-                "Choose an action or set of actions and execute it that highlights your abilities."
+                f'Market: {question}'
             )
 
             # Run agent in autonomous mode
@@ -185,7 +219,7 @@ def choose_mode():
 
 def main():
     """Start the chatbot agent."""
-    agent_executor, config, agent = initialize_agent()
+    agent_executor, config, agent = initialize_agent(2)
 
     mode = choose_mode()
     if mode == "chat":
