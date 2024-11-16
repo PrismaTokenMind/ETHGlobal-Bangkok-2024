@@ -4,7 +4,7 @@ import time
 
 from dotenv import load_dotenv
 
-from verifiable_langchain_agent import ChatRedpill
+from verifiable_langchain_agent import ChatVerifiableRedpill
 from langchain_core.messages import HumanMessage
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.prebuilt import create_react_agent
@@ -27,7 +27,7 @@ wallet_data_file = "../../wallet_data.txt"
 def initialize_agent():
     """Initialize the agent with CDP Agentkit."""
     # Initialize LLM.
-    llm = ChatRedpill(model="gpt-4o")
+    llm = ChatVerifiableRedpill(model="gpt-4o")
 
     wallet_data = None
 
@@ -61,7 +61,13 @@ def initialize_agent():
         func=cow_trade,
     )
 
-    tools.append(cowTradeTool)
+    # Define the list of tool names to keep
+    tools_to_keep = {"get_balance", "get_wallet_details"}
+
+    # Filter the tools based on the specified names to keep
+    filtered_tools = [tool for tool in tools if tool.name in tools_to_keep]
+
+    filtered_tools.append(cowTradeTool)
 
     # Store buffered conversation history in memory.
     memory = MemorySaver()
@@ -70,10 +76,10 @@ def initialize_agent():
     # Create ReAct Agent using the LLM and CDP Agentkit tools.
     return create_react_agent(
         llm,
-        tools=tools,
+        tools=filtered_tools,
         checkpointer=memory,
         state_modifier="You are a helpful agent that can interact onchain using the Coinbase Developer Platform Agentkit. You are empowered to interact onchain using your tools. If not, you can provide your wallet details and request funds from the user. You are only allowed to operate on Arbitrum Mainnet (e.g. `arbitrum-mainnet`). If someone asks you to do something you can't do with your currently available tools, you must say so, and encourage them to implement it themselves using the CDP SDK + Agentkit, recommend they go to docs.cdp.coinbase.com for more informaton. Be concise and helpful with your responses. Refrain from restating your tools' descriptions unless it is explicitly requested.",
-    ), config
+    ), config, llm
 
 
 # Autonomous Mode
@@ -107,7 +113,7 @@ def run_autonomous_mode(agent_executor, config, interval=10):
 
 
 # Chat Mode
-def run_chat_mode(agent_executor, config):
+def run_chat_mode(agent_executor, config, agent):
     """Run the agent interactively based on user input."""
     print("Starting chat mode... Type 'exit' to end.")
     while True:
@@ -127,6 +133,15 @@ def run_chat_mode(agent_executor, config):
                 print("-------------------")
 
         except KeyboardInterrupt:
+            print("\nProof Registry Content:\n")
+            print("Total Proofs: ", len(agent.proof_registry))
+            print(f"{'=' * 40}\n")
+            for index, proof in enumerate(agent.proof_registry, start=1):
+                cleaned_proof = proof.replace("\n", "").replace(" ", "")
+                print(f"Proof {index}:\n{'=' * 40}")
+                print(cleaned_proof)
+                print(f"{'=' * 40}\n")
+
             print("Goodbye Agent!")
             sys.exit(0)
 
@@ -149,11 +164,11 @@ def choose_mode():
 
 def main():
     """Start the chatbot agent."""
-    agent_executor, config = initialize_agent()
+    agent_executor, config, agent = initialize_agent()
 
     mode = choose_mode()
     if mode == "chat":
-        run_chat_mode(agent_executor=agent_executor, config=config)
+        run_chat_mode(agent_executor=agent_executor, config=config, agent=agent)
     elif mode == "auto":
         run_autonomous_mode(agent_executor=agent_executor, config=config)
 

@@ -225,19 +225,19 @@ files = [
 [package.dependencies]
 cbor2 = ">=5.1.2,<6.0.0"
 coincurve = [
-    {version = ">=19.0.1", markers = "python_version >= \"3.12\""},
     {version = ">=16.0.0", markers = "python_version == \"3.10\""},
     {version = ">=18.0.0", markers = "python_version == \"3.11\""},
+    {version = ">=19.0.1", markers = "python_version >= \"3.12\""},
 ]
 crcmod = ">=1.7,<2.0"
 ecdsa = ">=0.17,<1.0"
 ed25519-blake2b = [
-    {version = ">=1.4.1,<2.0.0", markers = "python_version >= \"3.12\""},
     {version = ">=1.4,<2.0.0", markers = "python_version < \"3.12\""},
+    {version = ">=1.4.1,<2.0.0", markers = "python_version >= \"3.12\""},
 ]
 py-sr25519-bindings = [
-    {version = ">=0.2.0,<2.0.0", markers = "python_version >= \"3.11\""},
     {version = ">=0.1.4,<2.0.0", markers = "python_version == \"3.10\""},
+    {version = ">=0.2.0,<2.0.0", markers = "python_version >= \"3.11\""},
 ]
 pycryptodome = ">=3.15,<4.0"
 pynacl = ">=1.5,<2.0"
@@ -1309,6 +1309,22 @@ files = [
 test = ["pytest (>=6)"]
 
 [[package]]
+name = "filelock"
+version = "3.16.1"
+description = "A platform independent file lock."
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "filelock-3.16.1-py3-none-any.whl", hash = "sha256:2082e5703d51fbf98ea75855d9d5527e33d8ff23099bec374a134febee6946b0"},
+    {file = "filelock-3.16.1.tar.gz", hash = "sha256:c249fbfcd5db47e5e2d6d62198e565475ee65e4831e2561c8e313fa7eb961435"},
+]
+
+[package.extras]
+docs = ["furo (>=2024.8.6)", "sphinx (>=8.0.2)", "sphinx-autodoc-typehints (>=2.4.1)"]
+testing = ["covdefaults (>=2.3)", "coverage (>=7.6.1)", "diff-cover (>=9.2)", "pytest (>=8.3.3)", "pytest-asyncio (>=0.24)", "pytest-cov (>=5)", "pytest-mock (>=3.14)", "pytest-timeout (>=2.3.1)", "virtualenv (>=20.26.4)"]
+typing = ["typing-extensions (>=4.12.2)"]
+
+[[package]]
 name = "frozenlist"
 version = "1.4.1"
 description = "A list-like structure which implements collections.abc.MutableSequence"
@@ -1714,8 +1730,8 @@ langchain-core = ">=0.3.15,<0.4.0"
 langchain-text-splitters = ">=0.3.0,<0.4.0"
 langsmith = ">=0.1.17,<0.2.0"
 numpy = [
-    {version = ">=1.26.0,<2.0.0", markers = "python_version >= \"3.12\""},
     {version = ">=1,<2", markers = "python_version < \"3.12\""},
+    {version = ">=1.26.0,<2.0.0", markers = "python_version >= \"3.12\""},
 ]
 pydantic = ">=2.7.4,<3.0.0"
 PyYAML = ">=5.3"
@@ -1739,8 +1755,8 @@ jsonpatch = ">=1.33,<2.0"
 langsmith = ">=0.1.125,<0.2.0"
 packaging = ">=23.2,<25"
 pydantic = [
-    {version = ">=2.7.4,<3.0.0", markers = "python_full_version >= \"3.12.4\""},
     {version = ">=2.5.2,<3.0.0", markers = "python_full_version < \"3.12.4\""},
+    {version = ">=2.7.4,<3.0.0", markers = "python_full_version >= \"3.12.4\""},
 ]
 PyYAML = ">=5.3"
 tenacity = ">=8.1.0,<8.4.0 || >8.4.0,<10.0.0"
@@ -1838,11 +1854,26 @@ files = [
 httpx = ">=0.23.0,<1"
 orjson = ">=3.9.14,<4.0.0"
 pydantic = [
-    {version = ">=2.7.4,<3.0.0", markers = "python_full_version >= \"3.12.4\""},
     {version = ">=1,<3", markers = "python_full_version < \"3.12.4\""},
+    {version = ">=2.7.4,<3.0.0", markers = "python_full_version >= \"3.12.4\""},
 ]
 requests = ">=2,<3"
 requests-toolbelt = ">=1.0.0,<2.0.0"
+
+[[package]]
+name = "maturin-import-hook"
+version = "0.1.0"
+description = "import hook to load rust projects built with maturin"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "maturin-import-hook-0.1.0.tar.gz", hash = "sha256:b31457d421db2a6aa51a2431a0f343ace17f4f59944a9670f2e6be66b3ea0499"},
+    {file = "maturin_import_hook-0.1.0-py3-none-any.whl", hash = "sha256:05cfeb40a161ec910081914aaf8909498b39b0e06d3edd89fd618b7cee38cceb"},
+]
+
+[package.dependencies]
+filelock = "*"
+tomli = {version = ">=1.1.0", markers = "python_version < \"3.11\""}
 
 [[package]]
 name = "msgpack"
@@ -2344,10 +2375,7 @@ files = [
 [package.dependencies]
 annotated-types = ">=0.6.0"
 pydantic-core = "2.23.4"
-typing-extensions = [
-    {version = ">=4.12.2", markers = "python_version >= \"3.13\""},
-    {version = ">=4.6.1", markers = "python_version < \"3.13\""},
-]
+typing-extensions = {version = ">=4.6.1", markers = "python_version < \"3.13\""}
 
 [package.extras]
 email = ["email-validator (>=2.0.0)"]
@@ -2985,6 +3013,23 @@ requests = ">=2.26.0"
 blobfile = ["blobfile (>=2)"]
 
 [[package]]
+name = "tlsn-langchain"
+version = "0.1.0"
+description = "Maturin Starter Project w/PyO3 & Poetry"
+optional = false
+python-versions = ">=3.8"
+files = []
+develop = false
+
+[package.dependencies]
+maturin-import-hook = "^0.1.0"
+python-dotenv = "^1.0.1"
+
+[package.source]
+type = "directory"
+url = "../tlsn-langchain"
+
+[[package]]
 name = "tomli"
 version = "2.1.0"
 description = "A lil' TOML parser"
@@ -3074,7 +3119,7 @@ name = "verifiable-langchain-agent"
 version = "0.1.1"
 description = "A project to verify agent connections using TLS Notary"
 optional = false
-python-versions = ">=3.9,<4.0"
+python-versions = ">=3.9,<3.13"
 files = []
 develop = false
 
@@ -3083,6 +3128,7 @@ httpx = "^0.27.2"
 httpx-sse = "^0.4.0"
 langchain-core = "^0.3.18"
 requests = "^2.32.3"
+tlsn_langchain = {path = "../tlsn-langchain"}
 
 [package.source]
 type = "directory"
@@ -3322,5 +3368,5 @@ multidict = ">=4.0"
 
 [metadata]
 lock-version = "2.0"
-python-versions = "^3.10"
-content-hash = "f79f29c05cfd1e933310617643ab596a267d7ac68a52420199dbf3d432a6b25e"
+python-versions = ">=3.10,<3.13"
+content-hash = "3a2d49e6d22142cfdc2263d274e1c6b2322107f34a1aa21bfc228d27518c9de3"

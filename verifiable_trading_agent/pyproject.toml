@@ -12,7 +12,7 @@ agent = "verifiable_trading_agent.chatbot:main"
 
 [tool.poetry.dependencies]
 verifiable-langchain-agent = { path = "../verifiable_langchain_agent" }
-python = "^3.10"
+python = ">=3.10,<3.13"
 langchain = "^0.3.4"
 langgraph = "^0.2.39"
 cdp-sdk = "^0.10.3"
