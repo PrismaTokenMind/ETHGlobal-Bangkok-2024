@@ -4,3 +4,6 @@
 /verifiable_langchain_agent/dist/*
 /fund-manager-graph/generated
 /fund-manager-graph/node_modules
+/cowapi/node_modules
+/cowapi/.next
+/cowapi/yarn.lock
