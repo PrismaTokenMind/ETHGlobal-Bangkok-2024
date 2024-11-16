@@ -1,0 +1,34 @@
+specVersion: 1.0.0
+indexerHints:
+  prune: auto
+schema:
+  file: schema.graphql
+dataSources:
+  - kind: ethereum
+    name: FundManager
+    network: arbitrum-one
+    source:
+      address: "0xE1C147F0Cc536aecfD51E8Aed87AeB1fc3f1DA45"
+      abi: FundManager
+      startBlock: 274915172
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - LimitOrderCreated
+        - TradeCompleted
+        - BotSummary
+      abis:
+        - name: FundManager
+          file: FundManager/FundManager.json
+      eventHandlers:
+        - event: Deposit(indexed address,uint256)
+          handler: handleDeposit
+        - event: LimitOrderCreated(uint256,uint256,address,address)
+          handler: handleLimitOrderCreated
+        - event: TradeCompleted(uint256,uint256,address,address)
+          handler: handleTradeCompleted
+        - event: Withdraw(indexed address,uint256)
+          handler: handleWithdraw
+      file: FundManager/FundManager.wasm
