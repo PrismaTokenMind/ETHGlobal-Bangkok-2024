@@ -95,14 +95,14 @@ fn generate_request(
     // Build the HTTP request to send the prompt to Model's API
     hyper::Request::builder()
         .method(Method::POST)
-        .uri(model_settings.api_settings.inference_route)
-        .header(HOST, model_settings.api_settings.server_domain)
+        .uri(model_settings.api_settings.inference_route.clone())
+        .header(HOST, model_settings.api_settings.server_domain.clone())
         .header("Accept-Encoding", "identity")
         .header(CONNECTION, "close")
         .header(CONTENT_TYPE, "application/json")
         .header(
             AUTHORIZATION,
-            format!("Bearer {}", model_settings.api_settings.api_key),
+            format!("Bearer {}", model_settings.key),
         )
         .body(json_body.to_string())
         .context("Error building the request")

@@ -38,7 +38,7 @@ pub(super) async fn setup_connections(
         // A Prover configuration
         let prover_config = ProverConfig::builder()
             .id(&connection_id)
-            .server_dns(config.model_settings.api_settings.server_domain)
+            .server_dns(config.model_settings.api_settings.server_domain.clone())
             .build()
             .context("Error building prover configuration")?;
 
@@ -75,7 +75,7 @@ pub(super) async fn setup_connections(
         // Configure a new prover with the unique session id returned from notary client.
         let prover_config = ProverConfig::builder()
             .id(session_id)
-            .server_dns(config.model_settings.api_settings.server_domain)
+            .server_dns(config.model_settings.api_settings.server_domain.clone())
             .build()
             .context("Error building prover configuration")?;
 
@@ -86,10 +86,15 @@ pub(super) async fn setup_connections(
             .context("Error setting up prover")?
     };
 
+    // Check that the server is using tls
+    if !config.model_settings.api_settings.tls {
+        return Err(anyhow::anyhow!("Server must use TLS"));
+    }
+
     debug!("Prover setup complete!");
     // Open a new socket to the application server.
     let client_socket =
-        tokio::net::TcpStream::connect((config.model_settings.api_settings.server_domain, 443))
+        tokio::net::TcpStream::connect((config.model_settings.api_settings.server_domain.clone(), 443))
             .await
             .context("Error connecting to server")?;
 

@@ -27,6 +27,7 @@ notary-client = { git = "https://github.com/tlsnotary/tlsn", package = "notary-c
 hyper = { version = "1.1", features = ["client", "http1"] }
 hyper-util = { version = "0.1", features = ["full"] }
 hyper-tls = { version = "0.6.0" }
+url = "2.5.3"
 
 http-body-util = { version = "0.1.2" }
 p256 = { version = "0.13", features = ["ecdsa"] }

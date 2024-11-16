@@ -3,7 +3,7 @@ mod setup_notary;
 mod config;
 mod tlsn_operations;
 
-use crate::config::{Config, ModelSettings};
+use crate::config::{Config, ModelSettings, ProviderURL};
 use crate::model_interactions::single_interaction_round;
 use crate::setup_notary::setup_connections;
 use crate::tlsn_operations::{build_proof, notarise_session};
@@ -23,9 +23,9 @@ fn tlsn_langchain(_: Python, m: &PyModule) -> PyResult<()> {
 
 #[allow(unused_variables)]
 #[pyfunction]
-pub fn exec_async(py: Python, model: String, api_key: String, messages: Vec<String>, tools: Vec<String>, top_p: f64, temperature: f64, stream: bool) -> PyResult<&PyAny> {
+pub fn exec_async(py: Python, model: String, api_key: String, messages: Vec<String>, tools: Vec<String>, top_p: f64, temperature: f64, stream: bool, url: String) -> PyResult<&PyAny> {
     pyo3_asyncio::tokio::future_into_py(py, async move {
-        notarised_model_request(model, api_key, messages, tools, top_p, temperature).await.map_err(|e| {
+        notarised_model_request(model, api_key, messages, tools, top_p, temperature, url).await.map_err(|e| {
             PyErr::new::<PyTypeError, _>(e.to_string())
         })
     })
@@ -33,24 +33,24 @@ pub fn exec_async(py: Python, model: String, api_key: String, messages: Vec<Stri
 
 #[allow(unused_variables)]
 #[pyfunction]
-pub fn exec(py: Python, model: String, api_key: String, messages: Vec<String>, tools: Vec<String>, top_p: f64, temperature: f64, stream: bool) -> PyResult<(String, String)> {
+pub fn exec(py: Python, model: String, api_key: String, messages: Vec<String>, tools: Vec<String>, top_p: f64, temperature: f64, stream: bool, url: String) -> PyResult<(String, String)> {
 
         let rt = Runtime::new().unwrap();
-        rt.block_on(notarised_model_request(model, api_key, messages, tools, top_p, temperature)).map_err(|e| {
+        rt.block_on(notarised_model_request(model, api_key, messages, tools, top_p, temperature, url)).map_err(|e| {
             PyErr::new::<PyTypeError, _>(e.to_string())
         })
 }
 
-pub async fn notarised_model_request(model: String, api_key: String, messages: Vec<String>, tools: Vec<String>, top_p: f64, temperature: f64) -> Result<(String, String)> {
-    let config = Config {
-        model_settings: ModelSettings {
+pub async fn notarised_model_request(model: String, api_key: String, messages: Vec<String>, tools: Vec<String>, top_p: f64, temperature: f64, url: String) -> Result<(String, String)> {
+
+
+    let config = Config::new(
+        ModelSettings {
+            api_settings: ProviderURL::try_from(url.as_str()).context("Error parsing URL")?,
             id: model,
-            api_settings: config::ModelApiSettings::new(api_key),
-            setup_prompt: "Model Prompt: YOU ARE GOING TO BE ACTING AS A HELPFUL ASSISTANT",
-        },
-        privacy_settings: config::PrivacySettings::default(),
-        notary_settings: config::NotarySettings::default(),
-    };
+            key: api_key,
+        }
+    );
 
     debug!("The system is being setup...");
 
@@ -151,8 +151,9 @@ mod tests {
 
         let top_p = 0.85;
         let temperature = 0.3;
+        let url= "https://api.red-pill.ai/v1/chat/completions".to_string();
 
-        let (response, proof) = notarised_model_request(model, api_key, messages, tools, top_p, temperature).await?;
+        let (response, proof) = notarised_model_request(model, api_key, messages, tools, top_p, temperature, url).await?;
         println!("Response: {}", response);
         println!("Proof: {}", proof.replace("\n", "").replace(" ", ""));
 

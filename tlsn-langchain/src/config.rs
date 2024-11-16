@@ -1,29 +1,26 @@
-#![allow(dead_code)]
+use url::Url;
 
-use std::sync::LazyLock;
-
-static SETUP_PROMPT: LazyLock<&str> =
-    LazyLock::new(|| "Model Prompt: YOU ARE GOING TO BE ACTING AS A HELPFUL ASSISTANT");
-
-/// Configuration for API settings, including server endpoints and the API key
-#[derive(Debug, Default)]
-pub struct ModelApiSettings {
-    pub server_domain: &'static str,
-    pub inference_route: &'static str,
-    pub model_list_route: &'static str,
-    pub api_key: String,
+#[derive(Debug, Eq, PartialEq)]
+pub(crate) struct ProviderURL {
+    pub server_domain: String,
+    pub inference_route: String,
+    pub tls: bool,
 }
 
-impl ModelApiSettings {
-    pub(crate) fn new(api_key: String) -> Self {
-        Self {
-            server_domain: "api.red-pill.ai",
-            inference_route: "/v1/chat/completions",
-            model_list_route: "/v1/models",
-            api_key,
-        }
+impl TryFrom<&str> for ProviderURL {
+    type Error = anyhow::Error;
+
+    fn try_from(url: &str) -> Result<Self, anyhow::Error> {
+        let parsed_url = Url::parse(&url).ok().context("Failed to parse URL")?;
+        let tls = parsed_url.scheme() == "https";
+        let server_domain = parsed_url.host_str().ok_or_else(|| anyhow!("Failed to parse host"))?.to_string();
+        let inference_route = parsed_url.path().to_string();
+
+        Ok(Self{server_domain, inference_route, tls})
     }
 }
+
+use anyhow::{anyhow, Context};
 
 #[derive(Debug)]
 pub struct NotarySettings {
@@ -72,19 +69,9 @@ impl Default for PrivacySettings {
 /// Model settings including API settings, model ID, and setup prompt
 #[derive(Debug)]
 pub struct ModelSettings {
-    pub api_settings: ModelApiSettings,
+    pub api_settings: ProviderURL,
+    pub key: String,
     pub id: String,
-    pub setup_prompt: &'static str,
-}
-
-impl ModelSettings {
-    fn new(model_id: String, api_settings: ModelApiSettings) -> Self {
-        Self {
-            api_settings,
-            id: model_id,
-            setup_prompt: *SETUP_PROMPT,
-        }
-    }
 }
 
 /// Complete application configuration including model, privacy, and notary settings
@@ -96,11 +83,55 @@ pub struct Config {
 }
 
 impl Config {
-    fn new(model_settings: ModelSettings) -> Self {
+    pub(crate) fn new(model_settings: ModelSettings) -> Self {
         Self {
             model_settings,
             privacy_settings: PrivacySettings::default(),
             notary_settings: NotarySettings::default(),
         }
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use anyhow::Result;
+
+    #[test]
+    fn test_parse_url() -> Result<()> {
+        let url = "https://api.red-pill.ai/v1/chat/completions".to_string();
+        let expected = ProviderURL {
+            server_domain: "api.red-pill.ai".to_string(),
+            inference_route: "/v1/chat/completions".to_string(),
+            tls: true,
+        };
+
+        let result = ProviderURL::try_from(url.as_str())?;
+        assert_eq!(result, expected);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_url_http() ->  Result<()> {
+        let url = "http://example.com/api/test".to_string();
+        let expected = ProviderURL {
+            server_domain: "example.com".to_string(),
+            inference_route: "/api/test".to_string(),
+            tls: false,
+        };
+
+        let result = ProviderURL::try_from(url.as_str())?;
+        assert_eq!(result, expected);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_url_invalid() {
+        let url = "invalid_url".to_string();
+        let result = ProviderURL::try_from(url.as_str());
+        assert!(result.is_err())
     }
 }
