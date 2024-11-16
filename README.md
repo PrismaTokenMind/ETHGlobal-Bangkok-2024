@@ -8,3 +8,6 @@ Repository structure:
 ```fund-manager-graph``` - The Graph subgraph for our contract
 
 ```verifiable_trading_agent/src/verifiable_trading_agent/chatbot.py``` - The AI agent client
+
+
+Website: https://eth-bangkok-mu.vercel.app/
