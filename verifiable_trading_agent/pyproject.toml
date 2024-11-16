@@ -1,0 +1,34 @@
+[tool.poetry]
+name = "verifiable_trading_agent"
+version = "0.1.0"
+description = "A Trading Agent who's actions are verifiable through TLS Notary"
+authors = ["Artem <elus.aegis@gmail.com>", "Vadzim <>"]
+readme = "README.md"
+license = "Apache-2.0"
+keywords = ["agentkit", "ai", "langchain", "verifiable", "trading", "agent", "crypto", "blockchain"]
+
+[tool.poetry.scripts]
+chatbot = "verifiable_trading_agent.chatbot:main"
+
+[tool.poetry.dependencies]
+verifiable-langchain-agent = { path = "../verifiable_langchain_agent" }
+python = "^3.10"
+langchain = "^0.3.4"
+langgraph = "^0.2.39"
+cdp-sdk = "^0.10.3"
+pydantic = "^2.0"
+cdp-agentkit-core = "^0.0.5"
+python-dotenv = "^1.0.1"
+cdp-langchain = "^0.0.7"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.3"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"

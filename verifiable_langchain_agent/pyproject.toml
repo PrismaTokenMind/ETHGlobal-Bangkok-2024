@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "verifiable_langchain_agent"
+name = "verifiable-langchain-agent"
 version = "0.1.1"
 description = "A project to verify agent connections using TLS Notary"
 authors = ["Artem <elus.aegis@gmail.com>"]
