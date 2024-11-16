@@ -1,3 +1,4 @@
 /.env
-/trading-agent/wallet_data.txt
 /verifiable_trading_agent/wallet_data.txt
+/verifiable_langchain_agent/build/*
+/verifiable_langchain_agent/dist/*
