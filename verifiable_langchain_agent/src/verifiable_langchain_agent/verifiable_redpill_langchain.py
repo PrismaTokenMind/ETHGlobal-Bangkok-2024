@@ -408,6 +408,7 @@ class VerifiableChatRedpill(BaseChatModel):
     """What probability mass to use."""
     model_kwargs: Dict[str, Any] = Field(default_factory=dict)
     """Holds any model parameters valid for API call not explicitly specified."""
+    proof_registry: list[Any] = []
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -487,7 +488,8 @@ class VerifiableChatRedpill(BaseChatModel):
         res = self._chat(messages, **kwargs)
         if res.status_code != 200:
             raise ValueError(f"Error from Redpill api response: {res}")
-        response = res.json()
+        response = json.loads(res.json())
+        print("Response from Redpill API JSON: ", response)
         return self._create_chat_result(response)
 
     def _stream(
@@ -540,6 +542,7 @@ class VerifiableChatRedpill(BaseChatModel):
 
         import httpx
 
+        # TODO - use the tlsn_langchain.exec_async function to make the API call
         async with httpx.AsyncClient(
             headers=headers, timeout=self.request_timeout
         ) as client:
@@ -558,6 +561,7 @@ class VerifiableChatRedpill(BaseChatModel):
         payload = self._create_payload_parameters(messages, stream=True, **kwargs)
         import httpx
 
+        # TODO - use the tlsn_langchain.exec_async function to make the API call
         async with httpx.AsyncClient(
             headers=headers, timeout=self.request_timeout
         ) as client:
@@ -589,18 +593,38 @@ class VerifiableChatRedpill(BaseChatModel):
                         break
 
     def _chat(self, messages: List[BaseMessage], **kwargs: Any) -> requests.Response:
-        payload = self._create_payload_parameters(messages, **kwargs)
         url = self.redpill_api_base
-        headers = self._create_headers_parameters(**kwargs)
 
-        res = requests.post(
-            url=url,
-            timeout=self.request_timeout,
-            headers=headers,
-            json=payload,
-            stream=self.streaming,
+        parameters = {**self._default_params, **kwargs}
+        print("Parameters: ", parameters)
+        temperature = parameters.pop("temperature", 0.3)
+        top_p = parameters.pop("top_p", 0.85)
+        model = parameters.pop("model", "gpt-4o")
+        with_search_enhance = parameters.pop("with_search_enhance", False)
+        stream = parameters.pop("stream", False)
+
+        # Convert `tools` and `model` lists to JSON strings with escaped quotes
+        tools = [json.dumps(tool).replace('"', '\"') for tool in parameters.pop("tools", [])]
+        messages = [json.dumps(_convert_message_to_dict(message)).replace('"', '\"') for message in messages]
+
+        # Wrap each string in triple quotes to create the desired format
+        tools = [f'{tool}' for tool in tools]
+        messages = [f'{message}' for message in messages]
+
+        res = tlsn_langchain.exec(
+            model=model,
+            api_key=self.redpill_api_key.get_secret_value(),
+            messages=messages,
+            tools=tools,
+            top_p=top_p,
+            temperature=temperature,
+            stream=stream,
+            url=url
         )
-        return res
+
+        self.proof_registry.append(res.proof)
+
+        return res.api_response
 
     def _create_payload_parameters(  # type: ignore[no-untyped-def]
         self, messages: List[BaseMessage], **kwargs
@@ -651,7 +675,7 @@ class VerifiableChatRedpill(BaseChatModel):
 
     @property
     def _llm_type(self) -> str:
-        return "redpill-chat" # TODO - replace with your custom LLM type
+        return "redpill-chat"
 
     def bind_tools(
         self,

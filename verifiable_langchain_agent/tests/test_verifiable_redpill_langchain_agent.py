@@ -31,11 +31,10 @@ def setup_agent():
     tools = [search]
     agent_executor = create_react_agent(model, tools, checkpointer=memory)
 
-    return agent_executor
-
+    return agent_executor, model
 
 def test_agent_interaction(setup_agent):
-    agent_executor = setup_agent
+    agent_executor, model = setup_agent  # Unpack both agent_executor and model
     config = {"configurable": {"thread_id": "abc123"}}
 
     # First interaction
@@ -60,3 +59,11 @@ def test_agent_interaction(setup_agent):
     # Optional print for debugging
     print("First response chunks:", response_1)
     print("Second response chunks:", response_2)
+
+    # Access and pretty-print proof_registry after interactions
+    print("\nProof Registry Content:\n")
+    for index, proof in enumerate(model.proof_registry, start=1):
+        cleaned_proof = proof.replace("\n", "").replace(" ", "")
+        print(f"Proof {index}:\n{'=' * 40}")
+        print(cleaned_proof)
+        print(f"{'=' * 40}\n")
