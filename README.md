@@ -19,7 +19,11 @@
 
 5. **`verifiable_trading_agent`** - Contains the AI trading agent client and the Polymind Fund Manager smart contract.
 
+### Contracts and Chain
 
+We decided to use Arbitrub Mainnet as it's supported by both CDP SDK and CoW Swap.
+
+Our Fund Manager contract is deployed at the address `0xE1C147F0Cc536aecfD51E8Aed87AeB1fc3f1DA45`. https://arbiscan.io/address/0xE1C147F0Cc536aecfD51E8Aed87AeB1fc3f1DA45
 
 
 ## NotarIA (Verifiable Agent Developer Library)
