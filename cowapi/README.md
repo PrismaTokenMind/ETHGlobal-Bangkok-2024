@@ -1,8 +1,10 @@
 ## CoW Orders API
 
-Cow Orders API implementation can be found at ```src/pages/api/createCoWOrder.ts``` for market order creation and ```src/pages/api/createLimitOrder.ts``` for limit order creation.
+`Cow Orders API` implementation can be found at ```src/pages/api/createCoWOrder.ts``` for market order creation and ```src/pages/api/createLimitOrder.ts``` for limit order creation.
 
-1Inch Portfolio API used in ```src/pages/api/prox.ts``` to get latest portfolio data of the AI agent.
+`1Inch Portfolio API` used in ```src/pages/api/prox.ts``` to get latest portfolio data of the AI agent.
+
+`Dynamic` wallet integration can be found at ```src/pages/_app.ts```
 
 Call https://eth-bangkok-mu.vercel.app/api/createCoWOrder.ts to call deployed API
 
