@@ -1,7 +1,9 @@
+import json
 import os
 import random
 import sys
 import time
+from datetime import datetime
 
 import requests
 
@@ -20,7 +22,6 @@ from cdp_langchain.tools import CdpTool
 
 from verifiable_trading_agent.cow_trade_action import COW_TRADE_PROMPT, CoWTradeInput, cow_trade
 from verifiable_trading_agent.cow_trade_limit_order import COW_TRADE_LIMIT_PROMPT, CoWTradeLimitInput, cow_trade_limit
-
 
 # Load environment variables from .env file
 load_dotenv()
@@ -82,7 +83,7 @@ def display_proof(agent):
 def initialize_agent(mode):
     """Initialize the agent with CDP Agentkit."""
     # Initialize LLM.
-    llm = ChatVerifiableRedpill(model="gpt-4o")
+    llm = ChatOpenAI(model="gpt-4o")
 
     wallet_data = None
 
@@ -123,14 +124,14 @@ def initialize_agent(mode):
         args_schema=CoWTradeLimitInput,
         func=cow_trade_limit,
     )
-
-    polymarketDataTool = CdpTool(
-        name="polymarket_markets",
-        description=POLYMARKET_DATA_PROMPT,
-        cdp_agentkit_wrapper=agentkit,
-        args_schema=PolymarketInput,
-        func=polymarket_data,
-    )
+    #
+    # polymarketDataTool = CdpTool(
+    #     name="polymarket_markets",
+    #     description=POLYMARKET_DATA_PROMPT,
+    #     cdp_agentkit_wrapper=agentkit,
+    #     args_schema=PolymarketInput,
+    #     func=polymarket_data,
+    # )
 
     # Define the list of tool names to keep
     tools_to_keep = {"get_balance", "get_wallet_details"}
@@ -139,8 +140,8 @@ def initialize_agent(mode):
     filtered_tools = [tool for tool in tools if tool.name in tools_to_keep]
 
     filtered_tools.append(cowTradeTool)
-    filtered_tools.append(cowTradeLimitTool)
-    filtered_tools.append(polymarketDataTool)
+    # filtered_tools.append(cowTradeLimitTool)
+    # filtered_tools.append(polymarketDataTool)
 
     # Store buffered conversation history in memory.
     memory = MemorySaver()
@@ -244,9 +245,9 @@ def run_chat_mode(agent_executor, config, agent):
             print("Total Proofs: ", len(agent.proof_registry))
             print(f"{'=' * 40}\n")
             for index, proof in enumerate(agent.proof_registry, start=1):
-                cleaned_proof = proof.replace("\n", "").replace(" ", "")
+                cleaned_proof_res = clean_proof(proof)
                 print(f"Proof {index}:\n{'=' * 40}")
-                print(cleaned_proof)
+                print(cleaned_proof_res)
                 print(f"{'=' * 40}\n")
 
             print("Goodbye Agent!")
