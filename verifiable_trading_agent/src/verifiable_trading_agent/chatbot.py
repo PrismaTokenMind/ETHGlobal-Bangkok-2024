@@ -20,7 +20,6 @@ from cdp_langchain.tools import CdpTool
 
 from verifiable_trading_agent.cow_trade_action import COW_TRADE_PROMPT, CoWTradeInput, cow_trade
 from verifiable_trading_agent.cow_trade_limit_order import COW_TRADE_LIMIT_PROMPT, CoWTradeLimitInput, cow_trade_limit
-from verifiable_trading_agent.get_polymarket_markets import POLYMARKET_DATA_PROMPT, PolymarketInput, polymarket_data
 
 
 # Load environment variables from .env file
