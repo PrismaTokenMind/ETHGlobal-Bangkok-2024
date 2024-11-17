@@ -6,6 +6,8 @@
 
 **Polymind Website**: https://eth-bangkok-mu.vercel.app/
 
+![The architecture of our project](docs/the_architecture.png)
+
 
 ### Repository Structure
 
@@ -38,12 +40,17 @@ NotarIA – Verifiable Agent Developer Library
 
 ### Motivation
 
+
 Current AI agents lack the robustness required for trustless applications. They are vulnerable because:
+
 
 1. **Host Dependence:** Agents run on hosts that can be tampered with, leading to altered or malicious behavior.
 2. **Verification Challenges:** Verifying AI model execution is computationally intensive and impractical for state-of-the-art models like GPT-4.
 3. **Closed-Source Limitations:** Top-performing models are often closed-source and accessible only via APIs, making full verification impossible.
 4. **Security Risks:** Public models run independently can be easier hacked or manipulated using Adversarial Attacks compared to enterprise version.
+5. 
+![How the agents are today](docs/how_agents_are_today.png)
+
 
 ### Solution
 
@@ -53,6 +60,9 @@ NotarIA addresses these issues by:
 2. **Utilizing TLS Notary:** Employs a TLS Notary to attest the authenticity of AI agent responses, ensuring they originate from the trusted model provider.
 3. **Minimizing Trusted Parties:** Requires trust only in the model provider and the TLS Notary, which itself can be run in a TEE, not the agent host.
 4. **Simplifying Integration:** Offers a library that integrate seamlessly with Python and LangChain, making adoption of Verifiable Agents effortless.
+
+![How the agents should work](docs/how_agents_should_be.png)
+
 
 ### Implementation
 
@@ -70,6 +80,8 @@ We developed:
 
 After operations, proofs of agent actions are accessible via `model.proof_registry` and can be verified on the TLSNotary Explorer.
 
+
+
 ### Advantages
 
 - **Efficiency:** Compatible with any model size, including closed-source models, without the overhead of executing and verifying models on-chain.
@@ -78,6 +90,8 @@ After operations, proofs of agent actions are accessible via `model.proof_regist
 
 
 ## Polymind (Verifiable AI Agent Managed Fund)
+
+
 
 Polymind leverages NotarIA to create a verifiable Agent Managed Fund, where an AI agent autonomously manages investments based on real-world data.
 
@@ -88,15 +102,25 @@ Polymind leverages NotarIA to create a verifiable Agent Managed Fund, where an A
 - **Order Processing:** Sends API calls that construct CoW Swap orders, submitting them to CoW solvers.
 - **Trade Integration:** Uses CoW Swap hooks to log trade information in the Fund Manager contract.
 
+![Agent Trades](docs/agent_trades.png)
+![Agent Stats](docs/agent_stats.png)
+
 ### User Interaction:
 
 - **Investing:** Users deposit USDC into the Fund Manager contract to invest.
 - **Stake Representation:** Users receive tokens representing their share of the fund.
+
+![Investing](docs/agent_actions.png)
+
 - **Transparency:** Users can view trades and agent statistics via the frontend.
+
+![Verification](docs/agent_verification.png)
 
 ---
 
 ## How It Works
+
+![Library Structure](docs/library_overview.png)
 
 **NotarIA (Verifiable Agent Developer Library)** includes two main components:
 
@@ -116,6 +140,8 @@ Provides the `ChatVerifiableRedpill` and `ChatRedpill` classes, extending  [Lang
 ```
 
 **Proof Registry:** Access proofs of agent actions via `model.proof_registry` for external verification.
+
+![Agent Sample Proof](docs/agent_sample_proof.png)
 
 ---
 
