@@ -9,7 +9,7 @@
 
 ### Repository Structure
 
-1. **`cowapi`** - Contains the [front-end application](https://eth-bangkok-mu.vercel.app/) as well as the API integration with CoW Swap.
+1. **`cowapi`** - Contains the [front-end application](https://eth-bangkok-mu.vercel.app/), the API integration with CoW Swap, Subgraph and 1Inch portfolio fetching.
 
 2. **`fund-manager-graph`** - The Graph subgraph that indexes and organizes data from the Fund Manager contract for front-end usage.
 
@@ -19,7 +19,11 @@
 
 5. **`verifiable_trading_agent`** - Contains the AI trading agent client and the Polymind Fund Manager smart contract.
 
+### Contracts and Chain
 
+We decided to use Arbitrub Mainnet as it's supported by both CDP SDK and CoW Swap.
+
+Our Fund Manager contract is deployed at the address `0xE1C147F0Cc536aecfD51E8Aed87AeB1fc3f1DA45`. https://arbiscan.io/address/0xE1C147F0Cc536aecfD51E8Aed87AeB1fc3f1DA45
 
 
 ## NotarIA (Verifiable Agent Developer Library)

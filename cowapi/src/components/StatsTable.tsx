@@ -1,6 +1,7 @@
 import { useQuery, gql } from '@apollo/client';
 import { formatUnits } from 'viem';
 import { useToken } from 'wagmi'
+import { useEffect, useState } from 'react';
 
 const GET_LOCATIONS = gql`
 query GetTrades {
@@ -16,8 +17,29 @@ query GetTrades {
 `;
 
 export default function StatsTable() {
-  
+    const [pnl, setPnl] = useState(0);
+    const [absoluteProfit, setAbsoluteProfit] = useState(0);
+    const [currentValue, setCurrentValue] = useState(0);
+
+
     const { loading, error, data } = useQuery(GET_LOCATIONS);
+
+  async function httpCall() {
+
+      try {        
+        const data = await fetch('/api/prox').then((res) => res.json());
+        console.log(data);
+        setCurrentValue(data.tokenValue);
+        setPnl(data.pnl);
+        setAbsoluteProfit(data.absoluteProfit);
+      } catch (error) {
+        console.error(error);
+      }
+  }
+
+    useEffect(() => {
+      httpCall();
+    }, []);
   
     return (
         <div>
@@ -29,7 +51,7 @@ export default function StatsTable() {
                 <span className="loading loading-spinner loading-lg"></span>
               </div>
                 :               
-                <div className='flex flex-row items-center justify-between'>
+                <div className='grid grid-cols-3 gap-3'>
                     <div className='flex p-4 items-center justify-center text-center'>
                         Total deposited balance: {formatUnits(data?.botSummary.depositBalance, 6)} USDC
                     </div>
@@ -38,6 +60,15 @@ export default function StatsTable() {
                     </div>
                     <div className='flex p-4 items-center justify-center text-center'>
                         Traded USDC volume: {Number(formatUnits(data?.botSummary.tradedUSDC, 18)).toFixed(3)} USDC
+                    </div>
+                    <div className='flex p-4 items-center justify-center text-center'>
+                        Agent PnL: {pnl?.toFixed(3)} %
+                    </div>
+                    <div className='flex p-4 items-center justify-center text-center'>
+                        Absolute profit: {absoluteProfit?.toFixed(3)} USDC
+                    </div>
+                    <div className='flex p-4 items-center justify-center text-center'>
+                        Portfolio Value: {currentValue?.toFixed(3)} USDC
                     </div>
                 </div>
               }
