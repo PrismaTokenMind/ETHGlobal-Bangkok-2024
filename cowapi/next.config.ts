@@ -1,8 +1,22 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  /* config options here */
-  reactStrictMode: true,
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  // serverExternalPackages: ['rust_verifier'],
+    webpack: (config:any, { isServer }:any) => {
+    if (isServer) {
+      config.module.rules.push({
+        test: /\.node$/,
+        use: [
+          {
+            loader: 'nextjs-node-loader',
+            options: {
+              outputPath: config.output.path,
+            },
+          },
+        ],
+      });
+    }
+    return config;
+  },
 };
 
-export default nextConfig;
+module.exports = nextConfig;

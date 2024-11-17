@@ -78,7 +78,7 @@ export default function LimitOrdersTable() {
             </div>
 
             {selectedProofs && (
-                <ProofsModal proofs={selectedProofs} onClose={closeModal} />
+                <ProofsModal _proofs={selectedProofs} onClose={closeModal} />
             )}
         </div>
     );

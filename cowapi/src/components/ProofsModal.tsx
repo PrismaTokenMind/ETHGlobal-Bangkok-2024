@@ -13,33 +13,69 @@ const proofs = [
 
 type VerificationStatus = 'pending' | 'succeeded' | 'failed';
 
+interface VerificationResult {
+  status: VerificationStatus;
+  data: { sent: any[]; recv: any[] } | null;
+}
+
 const ProofsModal: React.FC<ProofsModalProps> = ({ _proofs, onClose }) => {
   const [currentProofIndex, setCurrentProofIndex] = useState<number>(0);
   const [verificationResults, setVerificationResults] = useState<{
-    [index: number]: VerificationStatus;
-  }>({}); // Object to cache verification results
-const modalRef = useRef<HTMLDivElement | null>(null);
+    [index: number]: VerificationResult;
+  }>({}); // Object to cache both verification status and data
+    const [showSent, setShowSent] = useState<boolean>(true); // Toggle to show 'sent' or 'recv'
+
+
+  const modalRef = useRef<HTMLDivElement | null>(null);
 
   const handleNextProof = () => {
     setCurrentProofIndex((prevIndex) => (prevIndex + 1) % proofs.length);
+    setShowSent(true); // Reset to show 'sent' on new proof
   };
 
   const handlePreviousProof = () => {
     setCurrentProofIndex((prevIndex) =>
       prevIndex === 0 ? proofs.length - 1 : prevIndex - 1
     );
+    setShowSent(true); // Reset to show 'sent' on new proof
   };
 
-  // Dummy verify function to simulate verification process
-  const verify = (proof: string, index: number) => {
-    console.log("Verifying proof:", JSON.parse(proof));
-    const result = Math.random() > 0.5 ? 'succeeded' : 'failed'; // Randomly pass or fail for demo purposes
+  const verify = async (proof: string, index: number) => {
+    try {
+      const response = await fetch("/api/verify", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ proof }),
+      });
 
-    setVerificationResults((prevResults) => ({
-      ...prevResults,
-      [index]: result,
-    }));
+      if (!response.ok) {
+        throw new Error("Verification failed");
+      }
+
+      const result = await response.json();
+      const verificationStatus: VerificationStatus = result.error ? "failed" : "succeeded";
+
+      setVerificationResults((prevResults) => ({
+        ...prevResults,
+        [index]: {
+          status: verificationStatus,
+          data: result.error ? null : { sent: result.sent, recv: result.recv },
+        },
+      }));
+
+      console.log("Verification Result:", result);
+
+    } catch (error) {
+      console.error("Error during verification:", error);
+      setVerificationResults((prevResults) => ({
+        ...prevResults,
+        [index]: { status: "failed", data: null },
+      }));
+    }
   };
+
 
   // Close the modal when clicking outside
  useEffect(() => {
@@ -53,7 +89,7 @@ const modalRef = useRef<HTMLDivElement | null>(null);
   return () => document.removeEventListener('mousedown', handleClickOutside);
 }, [onClose]);
 
-  const currentStatus = verificationResults[currentProofIndex];
+  const currentResult = verificationResults[currentProofIndex];
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -61,49 +97,63 @@ const modalRef = useRef<HTMLDivElement | null>(null);
         {/* Close button as an X icon in the top right corner */}
         <button
             onClick={onClose}
-className="top left text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 relative z-10"
+            className="top left text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 relative z-10"
             aria-label="Close"
         >
-          <FiX size={24} />
+          <FiX size={24}/>
         </button>
 
-        <div className="mt-4">
-          <pre className="text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 p-4 rounded-lg overflow-auto">
-            {JSON.stringify(proofs[currentProofIndex], null, 2)}
-          </pre>
+        <div className="mt-4 h-[20rem] overflow-y-auto">
+          {currentResult?.status === 'succeeded' && currentResult.data ? (
+              <div className="text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                <h3 className="text-lg font-semibold mb-2">Verification Data</h3>
+                <p>{showSent ? <strong>Sent:</strong> :
+                    <strong>Received:</strong>} {showSent ? currentResult.data.sent : currentResult.data.recv}</p>
+                <button
+                    onClick={() => setShowSent((prev) => !prev)}
+                    className="mt-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded-md"
+                >
+                  {showSent ? 'Show Received' : 'Show Sent'}
+                </button>
+              </div>
+          ) : (
+              <pre className="text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+              {JSON.stringify(proofs[currentProofIndex], null, 2)}
+            </pre>
+          )}
         </div>
 
 
         {/* Show verification status based on result */}
         <div className="mt-4 text-center">
-          {currentStatus === 'succeeded' && (
-            <p className="text-green-500 font-bold">Verification Succeeded!</p>
+          {currentResult?.status === 'succeeded' && (
+              <p className="text-green-500 font-bold">Verification Succeeded!</p>
           )}
-          {currentStatus === 'failed' && (
-            <div>
-              <p className="text-red-500 font-bold">Verification Failed</p>
+          {currentResult?.status === 'failed' && (
+              <div>
+                <p className="text-red-500 font-bold">Verification Failed</p>
+                <button
+                    onClick={() => verify(proofs[currentProofIndex], currentProofIndex)}
+                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 mt-2 rounded-md"
+                >
+                  Retry Verification
+                </button>
+              </div>
+          )}
+          {currentResult?.status === 'pending' || !currentResult ? (
               <button
-                onClick={() => verify(proofs[currentProofIndex], currentProofIndex)}
-                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 mt-2 rounded-md"
+                  onClick={() => verify(proofs[currentProofIndex], currentProofIndex)}
+                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 mt-4 rounded-md w-full"
               >
-                Retry Verification
+                Verify Proof
               </button>
-            </div>
-          )}
-          {currentStatus === 'pending' || !currentStatus ? (
-            <button
-              onClick={() => verify(proofs[currentProofIndex], currentProofIndex)}
-              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 mt-4 rounded-md w-full"
-            >
-              Verify Proof
-            </button>
           ) : null}
         </div>
 
         <div className="mt-4 flex items-center justify-between">
           <button
-            onClick={handlePreviousProof}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
+              onClick={handlePreviousProof}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
           >
             Previous
           </button>
@@ -111,8 +161,8 @@ className="top left text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:ho
             Proof {currentProofIndex + 1} of {proofs.length}
           </span>
           <button
-            onClick={handleNextProof}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
+              onClick={handleNextProof}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
           >
             Next
           </button>
