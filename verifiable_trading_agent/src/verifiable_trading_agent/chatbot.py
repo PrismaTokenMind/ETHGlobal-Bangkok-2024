@@ -83,7 +83,7 @@ def display_proof(agent):
 def initialize_agent(mode):
     """Initialize the agent with CDP Agentkit."""
     # Initialize LLM.
-    llm = ChatOpenAI(model="gpt-4o")
+    llm = ChatVerifiableRedpill(model="gpt-4o")
 
     wallet_data = None
 
