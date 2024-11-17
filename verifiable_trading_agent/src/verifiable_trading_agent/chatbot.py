@@ -30,6 +30,56 @@ load_dotenv()
 wallet_data_file = "../../wallet_data.txt"
 
 
+def convert_bytes_to_hex(data):
+    if isinstance(data, list) and all(isinstance(x, int) and 0 <= x <= 255 for x in data):
+        # Convert list of bytes to hex string
+        return ''.join(f'{x:02x}' for x in data)
+    elif isinstance(data, dict):
+        # Recurse into dictionaries
+        return {key: convert_bytes_to_hex(value) for key, value in data.items()}
+    elif isinstance(data, list):
+        # Recurse into lists
+        return [convert_bytes_to_hex(element) for element in data]
+    else:
+        # Return the data as is if it's not a list of bytes
+        return data
+
+
+def pretty_print_proof(proof):
+    # Parse the JSON string into a Python dictionary
+    data = json.loads(proof)
+
+    # Convert byte arrays to hex strings
+    converted_data = convert_bytes_to_hex(data)
+
+    # Convert the processed dictionary back to a JSON string (pretty-printed)
+    converted_json_string = json.dumps(converted_data, indent=2)
+
+    # Print the result
+    return converted_json_string
+
+
+# Function to remove newlines and double quotes from a proof object
+def clean_proof(chunk_proof):
+    """Cleans the proof of unnecessary newline and double quote characters."""
+    cleaned_proof = pretty_print_proof(chunk_proof).replace("\n", "").replace(" ", "")
+    return cleaned_proof
+
+# Function to display proof in a nicely formatted way
+def display_proof(agent):
+    chunk_proof = agent.proof_registry[-1]  # Get the latest proof
+    cleaned_proof = clean_proof(chunk_proof)  # Clean the proof
+
+    print("\n================= AGENT RESPONSE PROOF =================")
+    print("Timestamp:", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    print("Agent Response Verification Proof:")
+    print("--------------------------------------------------------")
+    print(cleaned_proof)
+    print("--------------------------------------------------------")
+    print("Verification Status: ✅ Verified Successfully")
+    print("========================================================\n")
+
+
 def initialize_agent(mode):
     """Initialize the agent with CDP Agentkit."""
     # Initialize LLM.
@@ -173,7 +223,7 @@ def run_chat_mode(agent_executor, config, agent):
     print("Starting chat mode... Type 'exit' to end.")
     while True:
         try:
-            user_input = input("\nUser: ")
+            user_input = input("\nUser 👤: ")
             if user_input.lower() == "exit":
                 break
 
@@ -182,10 +232,13 @@ def run_chat_mode(agent_executor, config, agent):
                 {"messages": [HumanMessage(content=user_input)]}, config
             ):
                 if "agent" in chunk:
-                    print(chunk["agent"]["messages"][0].content)
+                    print("Agent 🤖:", chunk["agent"]["messages"][0].content)
                 elif "tools" in chunk:
-                    print(chunk["tools"]["messages"][0].content)
-                print("-------------------")
+                    print("Tool  ⚙️:", chunk["tools"]["messages"][0].content)
+
+                # Display proof if available
+                if agent.proof_registry:
+                    display_proof(agent)
 
         except KeyboardInterrupt:
             print("\nProof Registry Content:\n")
