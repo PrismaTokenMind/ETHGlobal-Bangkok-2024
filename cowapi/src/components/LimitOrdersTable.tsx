@@ -16,20 +16,6 @@ const GET_LOCATIONS = gql`
 `;
 
 export default function LimitOrdersTable() {
-    const [selectedProofs, setSelectedProofs] = useState<string[] | null>(null);
-
-    const handleIconClick = (proofs: string[]) => {
-        setSelectedProofs(proofs);
-        console.log("Selected proofs:", proofs); // Check if proofs are correctly passed
-    };
-
-    const closeModal = () => {
-        setSelectedProofs(null);
-    };
-
-    function checkProofsStatus(proofs: string[]) {
-        return proofs.some(proof => proof.includes("Error")) ? "⛔️" : "✅";
-    }
 
     const { loading, error, data } = useQuery(GET_LOCATIONS);
 
@@ -57,18 +43,13 @@ export default function LimitOrdersTable() {
                         const date = new Date(blockTimestamp * 1000);
                         const decimals = "0xaf88d065e77c8cC2239327C5EDb3A432268e5831".toLowerCase() === tokenOut.toLowerCase() ? 6 : 18;
 
-                        // TODO - Temporary placeholder for proofs; replace this with actual proofs data from your backend if available. Get from the `limitOrderCreateds?.map`
-                        const rowProofs = ["Proof 1", "Proof 2", "Proof 3"];
-
                         return (
                           <tr key={blockTimestamp}>
                             <td>{tokenOut}</td>
                             <td>{formatUnits(amountOut, decimals)}</td>
                             <th>${(amountIn / amountOut).toFixed(3)}</th>
                             <td>{date.toDateString()}</td>
-                            <td onClick={() => handleIconClick(rowProofs)} style={{ cursor: 'pointer' }}>
-                              {checkProofsStatus(rowProofs)}
-                            </td>
+                            <td>⏳</td>
                           </tr>
                         );
                       })}
@@ -76,10 +57,6 @@ export default function LimitOrdersTable() {
                   </table>
               }
             </div>
-
-            {selectedProofs && (
-                <ProofsModal _proofs={selectedProofs} onClose={closeModal} />
-            )}
         </div>
     );
 }
